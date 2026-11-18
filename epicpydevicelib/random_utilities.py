@@ -1,10 +1,11 @@
-import epiclibcpp.epiclib.random_utilities as ru
 import random
 
 # NOTE: Unfortunately, the seed somehow gets set on pybind11 translation(?), the
 #       effect is that all results are now static as if a seed was specified.
 #       Instead, I'm just calling the python version when possible
-from math import log, exp
+from math import exp, log
+
+import epiclibcpp.epiclib.random_utilities as ru
 
 
 def set_random_number_generator_seed(seed: int):

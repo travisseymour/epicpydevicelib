@@ -1,5 +1,5 @@
-from epiclibcpp.epiclib import Symbol, standard_symbols as std_sym
-
+from epiclibcpp.epiclib import Symbol
+from epiclibcpp.epiclib import standard_symbols as std_sym
 
 """
 include this file in any C++ code that needs to use Symbols commonly used in models

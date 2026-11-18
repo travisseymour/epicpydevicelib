@@ -1,7 +1,5 @@
-from typing import List
 
 # from epiclibcpp.epiclib import statistics, rms_statistics, geometric_utilities as gu
-
 import epiclibcpp.epiclib
 
 epic_statistics = epiclibcpp.epiclib.statistics
@@ -93,7 +91,7 @@ class Distribution_accumulator:
 
     def get_bin_size(self) -> float: ...
 
-    def get_distribution(self) -> List[float]: ...
+    def get_distribution(self) -> list[float]: ...
 
     def get_max(self) -> float: ...
 

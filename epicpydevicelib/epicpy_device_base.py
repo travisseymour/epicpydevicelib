@@ -1,26 +1,23 @@
-import time
-from pathlib import Path
-from io import BytesIO
 import base64
 import csv
-import re
-from typing import Union, List
 import itertools
+import re
+import time
+from io import BytesIO
+from pathlib import Path
 
 from epicpydevicelib.device_emitter import bus
 
 try:
     from ulid2 import generate_ulid_as_base32
-except Exception:
+except ImportError:
     import uuid
+import epiclibcpp.epiclib.geometric_utilities as gu
 import pandas
+from epiclibcpp.epiclib import Device_base, Output_tee, Speech_word, Symbol
+from epiclibcpp.epiclib.output_tee_globals import Device_out
 from matplotlib.figure import Figure
 from multimethod import multimethod
-
-from epiclibcpp.epiclib import Output_tee
-from epiclibcpp.epiclib import Device_base, Symbol, Speech_word
-from epiclibcpp.epiclib.output_tee_globals import Device_out
-import epiclibcpp.epiclib.geometric_utilities as gu
 
 e_boxed_x = "\u274e"
 e_boxed_check = "\u2611"
@@ -28,7 +25,7 @@ e_boxed_check = "\u2611"
 
 def unpack_param_string(
     pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
-) -> List[str]:
+) -> list[str]:
     """
     Expand the brace-delimited possibilities in a string.
     E.g.: "10 Easy Dash" or "10 [Easy|Hard] Dash" or "10 [Easy|Hard] [Dash|HUD]"
@@ -45,7 +42,7 @@ def unpack_param_string(
 class EpicPyDevice(Device_base):
     def __init__(self, ot: Output_tee, device_name: str, device_folder: Path):
         # NOTE: ot is not being used, just use Device_out(...)
-        super(EpicPyDevice, self).__init__(device_name, ot)
+        super().__init__(device_name, ot)
 
         self.device_name = device_name
         self.device_folder = device_folder
@@ -65,7 +62,7 @@ class EpicPyDevice(Device_base):
         # Any options you define here will be exposed to the user via a dialog window as
         # boolean checkboxes. This allows the user to alter some functionality of the
         # device from the EPIC gui during simulation runs.
-        self.option = dict()
+        self.option = {}
 
         # data
         # - Using a csv.writer() to ensure proper csv standards adherence!
@@ -85,7 +82,7 @@ class EpicPyDevice(Device_base):
     """
 
     def stats_write(
-        self, content: Union[str, Figure, pandas.DataFrame], *args, **kwargs
+        self, content: str | Figure | pandas.DataFrame, *args, **kwargs
     ):
         """
         Device write method for objects meant for stats_window.
@@ -100,7 +97,7 @@ class EpicPyDevice(Device_base):
         """
 
         if isinstance(content, str):
-            color = kwargs["color"] if "color" in kwargs else ""
+            color = kwargs.get("color", "")
             text = content.replace("\n", "<br>")
             if color:
                 text = f'<font color="{color}">{text}</font>'
@@ -116,10 +113,7 @@ class EpicPyDevice(Device_base):
         elif isinstance(content, (int, float, list, tuple, dict)):
             return str(content)
         else:
-            try:
-                text = content
-            except Exception as e:
-                text = f"ERROR: epicpy_device_base:stats_write({type(content)}): {e}"
+            text = str(content)
 
         bus.emit("stats_write", text)
 
@@ -183,12 +177,12 @@ class EpicPyDevice(Device_base):
             self.data_filepath.unlink()
             Device_out(
                 f'{e_boxed_check} Device "{self.device_name}" successfully deleted '
-                f'data output file "{str(self.data_filepath)}"'
+                f'data output file "{self.data_filepath!s}"'
             )
-        except Exception as e:
+        except OSError as e:
             Device_out(
                 f'{e_boxed_check} Device "{self.device_name}" reported an error while '
-                f'attempting to delete data output file "{str(self.data_filepath)}": '
+                f'attempting to delete data output file "{self.data_filepath!s}": '
                 f"[{e}]"
             )
 
@@ -206,7 +200,7 @@ class EpicPyDevice(Device_base):
             file_size = self.data_filepath.stat().st_size
             rows = len(self.data_filepath.read_text().splitlines())
             return f"Data Info: {rows - 1 if rows else 0} rows ({file_size} bytes)"
-        except Exception:
+        except (OSError, AssertionError):
             return "Data Info: ???"
 
     def init_data_output(self):
@@ -216,11 +210,11 @@ class EpicPyDevice(Device_base):
 
         # try to open data file, don't stop on fail, just warn via device_out
         try:
-            self.data_file = open(self.data_filepath, self.data_filemode)
-        except IOError as e:
+            self.data_file = open(self.data_filepath, self.data_filemode)  # noqa: SIM115
+        except OSError as e:
             Device_out(
                 f"\n{e_boxed_x} WARNING: Unable to open device datafile at "
-                f"{str(self.data_filepath)} "
+                f"{self.data_filepath!s} "
                 f"[{e}]!\n"
             )
             self.data_file = None
@@ -230,20 +224,20 @@ class EpicPyDevice(Device_base):
                 self.data_writer = csv.writer(self.data_file)
                 if self.data_filemode == "w" or self.data_filepath.stat().st_size == 0:
                     self.data_writer.writerow(self.data_header)
-            except IOError as e:
+            except OSError as e:
                 self.data_file.close()
                 self.data_file = None
                 self.data_writer = None
                 Device_out(
                     f"\n{e_boxed_x} WARNING: Unable to write to device datafile at "
-                    f"{str(self.data_filepath)} [{e}].\n"
+                    f"{self.data_filepath!s} [{e}].\n"
                 )
 
     def finalize_data_output(self):
         try:
             self.data_file.flush()
             self.data_file.close()
-        except Exception:  # broad on purpose!
+        except Exception:  # noqa: BLE001, S110 - broad on purpose!
             pass
 
         self.data_file = None
@@ -259,7 +253,7 @@ class EpicPyDevice(Device_base):
         """
         try:
             return generate_ulid_as_base32()
-        except Exception:
+        except NameError:
             return uuid.uuid5(uuid.NAMESPACE_URL, str(time.time_ns())).hex
 
     def accept_event(self, *args, **kwargs):
@@ -337,12 +331,12 @@ class EpicPyDevice(Device_base):
     ): ...
 
     def handle_HLGet_event(
-        self, props: List[Symbol], values: List[Symbol], tag: Symbol
+        self, props: list[Symbol], values: list[Symbol], tag: Symbol
     ):
         """default response is to simply echo the information back with a dummy name"""
         self.make_high_level_input_appear(Symbol("HLDummyObject"), props, values, tag)
 
-    def handle_HLPut_event(self, props: List[Symbol], values: List[Symbol]): ...
+    def handle_HLPut_event(self, props: list[Symbol], values: list[Symbol]): ...
 
     # SERVICES FOR THE DERIVED DEVICE_BASE CLASS
     # ------------------------------------------
@@ -368,7 +362,7 @@ class EpicPyDevice(Device_base):
     @multimethod
     def make_visual_object_appear(self, object_name: Symbol):
         """Tell the simulated human we have a new visual object"""
-        super(EpicPyDevice, self).make_visual_object_appear(object_name)
+        super().make_visual_object_appear(object_name)
 
     @multimethod
     def make_visual_object_appear(
@@ -378,22 +372,22 @@ class EpicPyDevice(Device_base):
         size: gu.Size,
     ):
         # Tell sim. human we have new visual object with specified location & size
-        super(EpicPyDevice, self).make_visual_object_appear(object_name, location, size)
+        super().make_visual_object_appear(object_name, location, size)
 
     def set_visual_object_location(self, object_name: Symbol, new_location: gu.Point):
         """Tell the simulated human that location of a visual object has changed"""
-        super(EpicPyDevice, self).set_visual_object_location(object_name, new_location)
+        super().set_visual_object_location(object_name, new_location)
 
     def set_visual_object_size(self, object_name: Symbol, new_size: gu.Size):
         """Tell the simulated human that size of a visual object has changed"""
-        super(EpicPyDevice, self).set_visual_object_size(object_name, new_size)
+        super().set_visual_object_size(object_name, new_size)
 
     @multimethod
     def set_visual_object_property(
         self, object_name: Symbol, property_name: Symbol, property_value: Symbol
     ):
         """Tell the simulated human we have a value for a property of a visual object"""
-        super(EpicPyDevice, self).set_visual_object_property(
+        super().set_visual_object_property(
             object_name, property_name, property_value
         )
 
@@ -402,10 +396,10 @@ class EpicPyDevice(Device_base):
         self,
         object_name: Symbol,
         property_name: Symbol,
-        property_value: Union[int, float],
+        property_value: float,
     ):
         """Tell the simulated human we have a value for a property of a visual object"""
-        super(EpicPyDevice, self).set_visual_object_property(
+        super().set_visual_object_property(
             object_name, property_name, Symbol(str(property_value))
         )
 
@@ -414,33 +408,33 @@ class EpicPyDevice(Device_base):
         self, object_name: Symbol, property_name: Symbol, property_value: str
     ):
         """Tell the simulated human we have a value for a property of a visual object"""
-        super(EpicPyDevice, self).set_visual_object_property(
+        super().set_visual_object_property(
             object_name, property_name, Symbol(property_value)
         )
 
     def make_visual_object_disappear(self, object_name: Symbol):
         """Tell the simulated human that a visual object is gone"""
-        super(EpicPyDevice, self).make_visual_object_disappear(object_name)
+        super().make_visual_object_disappear(object_name)
 
     def set_auditory_stream_location(self, name: Symbol, location: gu.Point):
         """A new auditory stream with location"""
-        super(EpicPyDevice, self).set_auditory_stream_location(name, location)
+        super().set_auditory_stream_location(name, location)
 
     def set_auditory_stream_size(self, name: Symbol, size: gu.Size):
         """The size of an auditory stream has changed"""
-        super(EpicPyDevice, self).set_auditory_stream_size(name, size)
+        super().set_auditory_stream_size(name, size)
 
     def set_auditory_stream_property(
         self, name: Symbol, propname: Symbol, propvalue: Symbol
     ):
         """A property of an auditory stream has changed"""
-        super(EpicPyDevice, self).set_auditory_stream_property(
+        super().set_auditory_stream_property(
             name, propname, propvalue
         )
 
     def make_auditory_event(self, message: Symbol):
         """An auditory event with a "message" as a simple signal"""
-        super(EpicPyDevice, self).make_auditory_event(message)
+        super().make_auditory_event(message)
 
     def make_auditory_sound_event(
         self,
@@ -456,7 +450,7 @@ class EpicPyDevice(Device_base):
         An auditory event with lcation, timbre, stream, duration, and optional
         intrinsic duration
         """
-        super(EpicPyDevice, self).make_auditory_sound_event(
+        super().make_auditory_sound_event(
             name, stream, location, timbre, loudness, duration, intrinsic_duration
         )
 
@@ -473,41 +467,41 @@ class EpicPyDevice(Device_base):
         A new auditory sound with location, timbre, stream, and intrinsic duration
         has started
         """
-        super(EpicPyDevice, self).make_auditory_sound_start(
+        super().make_auditory_sound_start(
             name, stream, location, timbre, loudness, intrinsic_duration
         )
 
     def make_auditory_sound_stop(self, name: Symbol):
         """The auditory sound has stopped"""
-        super(EpicPyDevice, self).make_auditory_sound_stop(name)
+        super().make_auditory_sound_stop(name)
 
     def set_auditory_sound_property(
         self, name: Symbol, propname: Symbol, propvalue: Symbol
     ):
         """A property of the auditory sound has changed"""
-        super(EpicPyDevice, self).set_auditory_sound_property(name, propname, propvalue)
+        super().set_auditory_sound_property(name, propname, propvalue)
 
     def make_auditory_speech_event(self, word: Speech_word):
-        super(EpicPyDevice, self).make_auditory_speech_event(word)
+        super().make_auditory_speech_event(word)
 
     def make_high_level_input_appear(
         self,
         object_name: Symbol,
-        props: List[Symbol],
-        values: List[Symbol],
+        props: list[Symbol],
+        values: list[Symbol],
         tag: Symbol,
     ):
         """
         Tell the simulated human that a High-Level input object with properties and
         values should be stored under a WM tag
         """
-        super(EpicPyDevice, self).make_high_level_input_appear(
+        super().make_high_level_input_appear(
             object_name, props, values, tag
         )
 
     def make_high_level_input_disappear(self, object_name: Symbol):
         """Tell the simulated human that a High-Level input object is gone"""
-        super(EpicPyDevice, self).make_high_level_input_disappear(object_name)
+        super().make_high_level_input_disappear(object_name)
 
     @multimethod
     def schedule_delay_event(self, delay: int):
@@ -516,11 +510,11 @@ class EpicPyDevice(Device_base):
         current time + the delay. The result is a call to the handle_Delay_event
         function at that time.
         """
-        super(EpicPyDevice, self).schedule_delay_event(delay)
+        super().schedule_delay_event(delay)
 
     @multimethod
     def schedule_delay_event(self, delay: int, delay_type: Symbol, delay_datum: Symbol):
-        super(EpicPyDevice, self).schedule_delay_event(delay, delay_type, delay_datum)
+        super().schedule_delay_event(delay, delay_type, delay_datum)
 
     @multimethod
     def schedule_delay_event(
@@ -534,7 +528,7 @@ class EpicPyDevice(Device_base):
         raise NotImplementedError(
             "ok, it is, but i am trying to see if this is every used!"
         )
-        super(EpicPyDevice, self).schedule_delay_event(
+        super().schedule_delay_event(
             delay, delay_type, object_name, property_name, property_value
         )
 
@@ -542,18 +536,18 @@ class EpicPyDevice(Device_base):
         """
         Tell the simulated human that a report with the specified duration must be made
         """
-        super(EpicPyDevice, self).make_report(time, duration)
+        super().make_report(time, duration)
 
     def set_human_parameter(self, proc_name: str, param_name: str, spec: str):
         """Allow the device to set a human parameter - for generating parametric runs"""
-        super(EpicPyDevice, self).set_human_parameter(proc_name, param_name, spec)
+        super().set_human_parameter(proc_name, param_name, spec)
 
     def get_human_prs_filename(self) -> str:
         """
         Allow the device to access the human's production rule set filename for
         documentation purposes
         """
-        return super(EpicPyDevice, self).get_human_prs_filename()
+        return super().get_human_prs_filename()
 
     # AVAILABLE BUT FORBIDDEN IN EPICPY
 
@@ -562,7 +556,7 @@ class EpicPyDevice(Device_base):
         # raise NotImplementedError(
         #     "Do Not Use Device_base.stop_simulation() with EPICpy!"
         # )
-        return super(EpicPyDevice, self).stop_simulation()
+        return super().stop_simulation()
 
     def __getattr__(self, name):
         def _missing(*args, **kwargs):

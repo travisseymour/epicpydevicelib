@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from epiclibcpp.epiclib import (
-    Symbol,
-    geometric_utilities as gu,
     Speech_word as speech_word,
 )
-
-from datetime import datetime
+from epiclibcpp.epiclib import (
+    Symbol,
+)
+from epiclibcpp.epiclib import (
+    geometric_utilities as gu,
+)
 
 from epicpydevicelib.geometric_utilities import Point
 
@@ -27,7 +31,7 @@ I had to move them to the end to satisfy Python.
 
 
 def timestamp() -> int:
-    return int(round(datetime.now().timestamp()))
+    return round(datetime.now().timestamp())
 
 
 class Speech_word:

@@ -1,5 +1,4 @@
 from epiclibcpp.epiclib import numeric_utilities as nu
-
 from multimethod import multimethod
 
 

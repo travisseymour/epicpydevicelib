@@ -1,7 +1,7 @@
-from typing import List, Union
-from multimethod import multimethod
 
-from epiclibcpp.epiclib import Symbol as _Symbol, geometric_utilities as gu
+from epiclibcpp.epiclib import Symbol as _Symbol
+from epiclibcpp.epiclib import geometric_utilities as gu
+from multimethod import multimethod
 
 
 class Symbol:
@@ -50,7 +50,7 @@ class Symbol:
     def __init__(self, s: str, check_for_number: bool = True): ...
 
     @multimethod
-    def __init__(self, x: Union[float, int]): ...
+    def __init__(self, x: float): ...
 
     @multimethod
     def __init__(self, x: float, y: float): ...
@@ -59,10 +59,10 @@ class Symbol:
     def __init__(self, p: gu.Point): ...
 
     @multimethod
-    def __init__(self, v: List[gu.Point]): ...
+    def __init__(self, v: list[gu.Point]): ...
 
     @multimethod
-    def __init__(self, c: str, v: List[gu.Point]): ...
+    def __init__(self, c: str, v: list[gu.Point]): ...
 
     @multimethod
     def __init__(self, src: _Symbol): ...
@@ -72,7 +72,6 @@ class Symbol:
 
     def swap(self, other: _Symbol):
         """swap the members"""
-        ...
 
     def has_string_value(self) -> bool: ...
 
@@ -88,39 +87,30 @@ class Symbol:
 
     def c_str(self) -> str:
         """string value must be present"""
-        ...
 
     def size(self) -> int:
         """string value must be present"""
-        ...
 
     def length(self) -> int:
         """string value must be present"""
-        ...
 
     def str(self) -> str:
         """string value must be present"""
-        ...
 
     def get_numeric_value(self) -> float:
         """must be a single double value"""
-        ...
 
     def get_point(self) -> gu.Point:
         """must be a single Point"""
-        ...
 
     def get_x(self) -> float:
         """must be a single Point present"""
-        ...
 
     def get_y(self) -> float:
         """must be a single Point present"""
-        ...
 
-    def get_Point_vector(self) -> List[gu.Point]:
+    def get_Point_vector(self) -> list[gu.Point]:
         """get the vector of Points. Must be any numeric value"""
-        ...
 
 
 if __name__ == "__main__":

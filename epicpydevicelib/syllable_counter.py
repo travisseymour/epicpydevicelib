@@ -7,5 +7,5 @@ def count_total_syllables(text: str) -> int:
 
 if __name__ == "__main__":
     # overestimates on 'something'
-    for word in "Love Boat promises something for everyone".split(" "):
+    for word in ["Love", "Boat", "promises", "something", "for", "everyone"]:
         print(f"{word} = {count_total_syllables(word)} syllables")

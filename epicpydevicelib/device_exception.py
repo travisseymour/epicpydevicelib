@@ -4,7 +4,7 @@ raise_on_device_error: bool = False
 
 class Device_exception(Exception):
     def __init__(self, message):
-        super(Device_exception, self).__init__(message)
+        super().__init__(message)
         if raise_on_device_error:
             raise_device_exception(message)
 

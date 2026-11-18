@@ -1,34 +1,34 @@
-from typing import List
-
-from multimethod import multimethod
 
 from epiclibcpp.epiclib import (
     Output_tee,
     Symbol,
     symbol_utilities,
+)
+from epiclibcpp.epiclib import (
     geometric_utilities as gu,
 )
+from multimethod import multimethod
 
 
 # Return the Symbol that is nth in the list, starting with 0
 # if not found, or not legal n, an empty Symbol is returned
-def get_nth_Symbol(in_list: List[Symbol], n: int) -> Symbol:
+def get_nth_Symbol(in_list: list[Symbol], n: int) -> Symbol:
     return symbol_utilities.get_nth_Symbol(in_list, n)
 
 
 @multimethod
-def print_Symbol_list(in_list: List[Symbol]):
+def print_Symbol_list(in_list: list[Symbol]):
     for symbol in in_list:
         print(symbol)
 
 
 @multimethod
-def print_Symbol_list(in_list: List[Symbol], ot: Output_tee):
+def print_Symbol_list(in_list: list[Symbol], ot: Output_tee):
     for symbol in in_list:
         ot(symbol)
 
 
-def cstr_to_Symbol_list(text: str) -> List[Symbol]:
+def cstr_to_Symbol_list(text: str) -> list[Symbol]:
     """
     return a list of Symbols, where each symbol is the whitespace delimited sequence
     in the input C-string.  e.g. "A B CD E" => (A B CD E)
@@ -112,7 +112,7 @@ def concatenate_to_Symbol(text1: str, sym: Symbol, text3: str, i: int) -> Symbol
     return symbol_utilities.concatenate_to_Symbol(text1, sym, text3, i)
 
 
-def concatenate_to_String(symbols: List[Symbol]) -> str:
+def concatenate_to_String(symbols: list[Symbol]) -> str:
     return symbol_utilities.concatenate_to_String(symbols)
 
 
@@ -122,6 +122,6 @@ if __name__ == "__main__":
     sym3 = Symbol(gu.Point(32, 44))
     sym4 = concatenate_to_Symbol("one", "two", "three", 4)
     sym5 = int_to_Symbol(1138)
-    symbols = list((sym1, sym2, sym3, sym4, sym5))
+    symbols = [sym1, sym2, sym3, sym4, sym5]
     print(f"{symbols=}")
     print(f"{get_nth_Symbol(symbols, 4)=}")

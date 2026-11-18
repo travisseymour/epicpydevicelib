@@ -1,5 +1,4 @@
 import math
-from typing import List
 
 from epiclibcpp.epiclib import geometric_utilities as gu
 from multimethod import multimethod
@@ -72,12 +71,10 @@ class Cartesian_vector:
         showing the vector from p1 to p2
         that is, p1 + cv => p2
         """
-        ...
 
     @multimethod
     def __init__(self, pv: "Polar_vector"):
         """construct a Cartesian_vector from a Polar_vector"""
-        ...
 
     def __new__(cls, *args, **kwargs):
         return gu.Cartesian_vector(*args, **kwargs)
@@ -99,12 +96,10 @@ class Polar_vector:
         showing the vector from p1 to p2
         that is, p1 + pv => p2
         """
-        ...
 
     @multimethod
     def __init__(self, cv: Cartesian_vector):
         """construct a Polar_vector from a Cartesian_vector"""
-        ...
 
     def __new__(cls, *args, **kwargs):
         return gu.Polar_vector(*args, **kwargs)
@@ -185,15 +180,12 @@ class Line_segment:
         These functions treat the segment as an infinite line
         Return True if p is on the infinite line described by the segment
         """
-        ...
 
     def closest_point_on_infinite_line(self, p: Point) -> Point:
         """Compute the closest point on the infinite line"""
-        ...
 
     def distance_from_infinite_line(self, p: Point) -> float:
         """Return the distance from the line to a point"""
-        ...
 
     def parameter(self, p: Point) -> float:
         """
@@ -202,38 +194,30 @@ class Line_segment:
         Otherwise, t corresponds to the position of the point along the line.
         t < 0 means p is "before" p1, t > 1, "after" p2.
         """
-        ...
 
     def parameter_given_x(self, x: float) -> float:
         """Compute t given a value for x"""
-        ...
 
     def x_given_parameter(self, t: float) -> float:
         """Return x of point on the line specified by t"""
-        ...
 
     def parameter_given_y(self, y: float) -> float:
         """Compute t given a value for y"""
-        ...
 
     def y_given_parameter(self, t: float) -> float:
         """Return y of point on the line specified by t"""
-        ...
 
     def point_on_line(self, t: float) -> Point:
         """Return the point on the line specified by t"""
-        ...
 
     def closest_point_on_segment(self, p: Point) -> Point:
         """
         Return the closest point on the line segment to p
         This is either a point on the line, or the closest endpoint
         """
-        ...
 
     def distance_from_segment(self, p: Point) -> float:
         """Return the distance from p to the closest point on the line segment"""
-        ...
 
 
 class Polygon:
@@ -246,37 +230,31 @@ class Polygon:
     def __init__(self): ...
 
     @multimethod
-    def __init__(self, vertices: List[Point]): ...
+    def __init__(self, vertices: list[Point]): ...
 
     def __new__(cls, *args, **kwargs):
         return gu.Polygon(*args, **kwargs)
 
     def add_vertex(self, p: Point):
         """create the polygon by adding points in order"""
-        ...
 
     def clear(self):
         """empty the polygon"""
-        ...
 
-    def get_vertices(self) -> List[Point]:
+    def get_vertices(self) -> list[Point]:
         """supply a reference to the vertices"""
-        ...
 
     def get_center(self) -> Point:
         """return the center of the bounding box"""
-        ...
 
     def get_size(self) -> Size:
         """return the Size of the bounding box"""
-        ...
 
     def distance_inside(self, p: Point) -> float:
         """
         compute the distance of p from the edge of the polygon.
         A negative value means that p is outside the polygon, positive means p is inside
         """
-        ...
 
 
 def is_point_inside_rectangle(p: Point, rect_loc: Point, rect_size: Size) -> bool:

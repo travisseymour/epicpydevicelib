@@ -1,6 +1,7 @@
 from epiclibcpp.epiclib import Auditory_encoder_base, Symbol
-from epiclibcpp.epiclib.standard_utility_symbols import Nil_c
 from epiclibcpp.epiclib import geometric_utilities as gu
+from epiclibcpp.epiclib.standard_utility_symbols import Nil_c
+
 # from epiclibcpp.epiclib.output_tee_globals import (Normal_out, Exception_out, Debug_out)
 
 # EpicPy will expect all auditory encoders to be of class
@@ -11,7 +12,7 @@ from epiclibcpp.epiclib import geometric_utilities as gu
 
 class EPICPyAuditoryEncoder(Auditory_encoder_base):
     def __init__(self, encoder_name: str):
-        super(EPICPyAuditoryEncoder, self).__init__(
+        super().__init__(
             encoder_name if encoder_name else "AuditoryEncoder"
         )
 
